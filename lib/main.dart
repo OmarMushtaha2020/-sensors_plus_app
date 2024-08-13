@@ -8,27 +8,11 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
@@ -40,15 +24,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -56,22 +31,36 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-double dx=100,dy=100;
+  double dx = 100, dy = 100;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final screenSize = MediaQuery.of(context).size;
+      dx = screenSize.width / 2;
+      dy = screenSize.height / 2;
+
+      SensorsPlatform.instance.gyroscopeEvents.listen((GyroscopeEvent event) {
+        setState(() {
+          dx = (dx + event.y * 20).clamp(0.0, screenSize.width - 40);
+          dy = (dy + event.x * 20).clamp(0.0, screenSize.height - 40);
+        });
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      body: StreamBuilder<GyroscopeEvent>(
-        stream: SensorsPlatform.instance.gyroscopeEvents,
-        builder: (_,snapshot){
-          if(snapshot.hasData){
-dx=dx+(snapshot.data!.y*10);
-dy=dy+(snapshot.data!.x*10);
-
-          }
-          return  Transform.translate(offset: Offset(dx, dy),child: CircleAvatar(radius: 20,),);
-
-        },
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: Transform.translate(
+        offset: Offset(dx, dy),
+        child: CircleAvatar(
+          radius: 20,
+        ),
       ),
     );
   }
